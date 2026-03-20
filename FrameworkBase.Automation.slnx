@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FrameworkBase.Automation.Api/FrameworkBase.Automation.Api.csproj" />
+    <Project Path="src/FrameworkBase.Automation.Core/FrameworkBase.Automation.Core.csproj" />
+    <Project Path="src/FrameworkBase.Automation.Desktop/FrameworkBase.Automation.Desktop.csproj" />
+    <Project Path="src/FrameworkBase.Automation.Infrastructure/FrameworkBase.Automation.Infrastructure.csproj" />
+    <Project Path="src/FrameworkBase.Automation.Web/FrameworkBase.Automation.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FrameworkBase.Automation.Api.Tests/FrameworkBase.Automation.Api.Tests.csproj" />
+    <Project Path="tests/FrameworkBase.Automation.Desktop.Tests/FrameworkBase.Automation.Desktop.Tests.csproj" />
+    <Project Path="tests/FrameworkBase.Automation.Web.Tests/FrameworkBase.Automation.Web.Tests.csproj" />
+  </Folder>
+</Solution>
