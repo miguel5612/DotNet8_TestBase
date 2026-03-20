@@ -1,0 +1,35 @@
+trigger:
+  branches:
+    include:
+      - main
+      - master
+
+pool:
+  vmImage: windows-latest
+
+variables:
+  BuildConfiguration: Release
+
+steps:
+  - checkout: self
+
+  - task: UseDotNet@2
+    inputs:
+      packageType: sdk
+      version: 8.0.x
+
+  - script: dotnet restore FrameworkBase.Automation.sln
+    displayName: Restore
+
+  - script: dotnet build FrameworkBase.Automation.sln --configuration $(BuildConfiguration) --no-restore -m:1
+    displayName: Build
+
+  - script: dotnet test tests/FrameworkBase.Automation.Api.Tests/FrameworkBase.Automation.Api.Tests.csproj --configuration $(BuildConfiguration) --no-build --filter "Category=Api"
+    displayName: Run API tests
+
+  - script: dotnet test tests/FrameworkBase.Automation.Web.Tests/FrameworkBase.Automation.Web.Tests.csproj --configuration $(BuildConfiguration) --no-build --filter "Category=Web"
+    displayName: Run Web tests
+
+  - script: dotnet test tests/FrameworkBase.Automation.Desktop.Tests/FrameworkBase.Automation.Desktop.Tests.csproj --configuration $(BuildConfiguration) --no-build --filter "Category=Desktop"
+    displayName: Run Desktop tests
+    continueOnError: true

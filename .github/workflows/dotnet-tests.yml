@@ -1,0 +1,35 @@
+name: dotnet-tests
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  automation:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore FrameworkBase.Automation.sln
+
+      - name: Build
+        run: dotnet build FrameworkBase.Automation.sln --configuration Release --no-restore -m:1
+
+      - name: API tests
+        run: dotnet test tests/FrameworkBase.Automation.Api.Tests/FrameworkBase.Automation.Api.Tests.csproj --configuration Release --no-build --filter "Category=Api"
+
+      - name: Web tests
+        run: dotnet test tests/FrameworkBase.Automation.Web.Tests/FrameworkBase.Automation.Web.Tests.csproj --configuration Release --no-build --filter "Category=Web"
+
+      - name: Desktop tests
+        run: dotnet test tests/FrameworkBase.Automation.Desktop.Tests/FrameworkBase.Automation.Desktop.Tests.csproj --configuration Release --no-build --filter "Category=Desktop"
+        continue-on-error: true
