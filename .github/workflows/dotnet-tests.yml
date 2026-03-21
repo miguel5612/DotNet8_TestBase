@@ -10,13 +10,19 @@ on:
 jobs:
   automation:
     runs-on: windows-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 8.0.x
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
 
       - name: Restore
         run: dotnet restore FrameworkBase.Automation.sln
@@ -34,13 +40,48 @@ jobs:
         id: desktop_server
         shell: pwsh
         run: |
+          function Test-DesktopServer {
+            try {
+              Invoke-WebRequest -Uri http://127.0.0.1:4723/status -UseBasicParsing -TimeoutSec 5 | Out-Null
+              return $true
+            } catch {
+              return $false
+            }
+          }
+
+          if (-not (Test-DesktopServer)) {
+            if (-not (Get-Command appium -ErrorAction SilentlyContinue)) {
+              npm install -g appium
+            }
+
+            $installedDrivers = appium driver list --installed | Out-String
+            if ($installedDrivers -notmatch 'windows') {
+              appium driver install windows
+            }
+
+            $appiumOutLog = Join-Path $env:RUNNER_TEMP 'appium-server.out.log'
+            $appiumErrLog = Join-Path $env:RUNNER_TEMP 'appium-server.err.log'
+            Start-Process powershell -ArgumentList @(
+              '-NoProfile',
+              '-ExecutionPolicy', 'Bypass',
+              '-File', 'scripts/start-appium.ps1'
+            ) -RedirectStandardOutput $appiumOutLog -RedirectStandardError $appiumErrLog -WindowStyle Hidden | Out-Null
+
+            for ($attempt = 0; $attempt -lt 12; $attempt++) {
+              Start-Sleep -Seconds 5
+              if (Test-DesktopServer) {
+                break
+              }
+            }
+          }
+
           try {
             $response = Invoke-WebRequest -Uri http://127.0.0.1:4723/status -UseBasicParsing -TimeoutSec 5
             "available=true" >> $env:GITHUB_OUTPUT
             Write-Host "Desktop automation server detected."
           } catch {
             "available=false" >> $env:GITHUB_OUTPUT
-            Write-Host "Desktop automation server not available on 127.0.0.1:4723. Skipping desktop tests."
+            Write-Host "Desktop automation server could not be started on 127.0.0.1:4723. Skipping desktop tests."
           }
 
       - name: Desktop tests
