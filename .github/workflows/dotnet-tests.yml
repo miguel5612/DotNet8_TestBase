@@ -30,6 +30,19 @@ jobs:
       - name: Web tests
         run: dotnet test tests/FrameworkBase.Automation.Web.Tests/FrameworkBase.Automation.Web.Tests.csproj --configuration Release --no-build --filter "Category=Web"
 
+      - name: Detect desktop automation server
+        id: desktop_server
+        shell: pwsh
+        run: |
+          try {
+            $response = Invoke-WebRequest -Uri http://127.0.0.1:4723/status -UseBasicParsing -TimeoutSec 5
+            "available=true" >> $env:GITHUB_OUTPUT
+            Write-Host "Desktop automation server detected."
+          } catch {
+            "available=false" >> $env:GITHUB_OUTPUT
+            Write-Host "Desktop automation server not available on 127.0.0.1:4723. Skipping desktop tests."
+          }
+
       - name: Desktop tests
+        if: steps.desktop_server.outputs.available == 'true'
         run: dotnet test tests/FrameworkBase.Automation.Desktop.Tests/FrameworkBase.Automation.Desktop.Tests.csproj --configuration Release --no-build --filter "Category=Desktop"
-        continue-on-error: true
