@@ -36,8 +36,7 @@ jobs:
       - name: Web tests
         run: dotnet test tests/FrameworkBase.Automation.Web.Tests/FrameworkBase.Automation.Web.Tests.csproj --configuration Release --no-build --filter "Category=Web"
 
-      - name: Detect desktop automation server
-        id: desktop_server
+      - name: Desktop tests
         shell: pwsh
         run: |
           function Test-DesktopServer {
@@ -49,6 +48,11 @@ jobs:
             }
           }
 
+          $appiumProcess = $null
+          $appiumOutLog = Join-Path $env:RUNNER_TEMP 'appium-server.out.log'
+          $appiumErrLog = Join-Path $env:RUNNER_TEMP 'appium-server.err.log'
+          $repoWadPath = Join-Path $env:GITHUB_WORKSPACE 'WindowsApplicationDriver_1.2.1\SourceDir\Windows Application Driver\WinAppDriver.exe'
+
           if (-not (Test-DesktopServer)) {
             if (-not (Get-Command appium -ErrorAction SilentlyContinue)) {
               npm install -g appium
@@ -59,31 +63,48 @@ jobs:
               appium driver install windows
             }
 
-            $appiumOutLog = Join-Path $env:RUNNER_TEMP 'appium-server.out.log'
-            $appiumErrLog = Join-Path $env:RUNNER_TEMP 'appium-server.err.log'
-            Start-Process powershell -ArgumentList @(
+            if (-not (Test-Path $repoWadPath)) {
+              appium driver run windows install-wad
+            }
+
+            $appiumProcess = Start-Process powershell -ArgumentList @(
               '-NoProfile',
               '-ExecutionPolicy', 'Bypass',
               '-File', 'scripts/start-appium.ps1'
-            ) -RedirectStandardOutput $appiumOutLog -RedirectStandardError $appiumErrLog -WindowStyle Hidden | Out-Null
+            ) -RedirectStandardOutput $appiumOutLog -RedirectStandardError $appiumErrLog -WindowStyle Hidden -PassThru
 
             for ($attempt = 0; $attempt -lt 12; $attempt++) {
               Start-Sleep -Seconds 5
               if (Test-DesktopServer) {
                 break
               }
+
+              if ($appiumProcess.HasExited) {
+                break
+              }
             }
           }
 
-          try {
-            $response = Invoke-WebRequest -Uri http://127.0.0.1:4723/status -UseBasicParsing -TimeoutSec 5
-            "available=true" >> $env:GITHUB_OUTPUT
-            Write-Host "Desktop automation server detected."
-          } catch {
-            "available=false" >> $env:GITHUB_OUTPUT
-            Write-Host "Desktop automation server could not be started on 127.0.0.1:4723. Skipping desktop tests."
+          if (-not (Test-DesktopServer)) {
+            Write-Warning 'Desktop automation server could not be started on 127.0.0.1:4723. Skipping desktop tests.'
+
+            if (Test-Path $appiumOutLog) {
+              Write-Host 'Appium stdout:'
+              Get-Content $appiumOutLog
+            }
+
+            if (Test-Path $appiumErrLog) {
+              Write-Host 'Appium stderr:'
+              Get-Content $appiumErrLog
+            }
+
+            exit 0
           }
 
-      - name: Desktop tests
-        if: steps.desktop_server.outputs.available == 'true'
-        run: dotnet test tests/FrameworkBase.Automation.Desktop.Tests/FrameworkBase.Automation.Desktop.Tests.csproj --configuration Release --no-build --filter "Category=Desktop"
+          try {
+            dotnet test tests/FrameworkBase.Automation.Desktop.Tests/FrameworkBase.Automation.Desktop.Tests.csproj --configuration Release --no-build --filter "Category=Desktop"
+          } finally {
+            if ($appiumProcess -and -not $appiumProcess.HasExited) {
+              Stop-Process -Id $appiumProcess.Id -Force
+            }
+          }
