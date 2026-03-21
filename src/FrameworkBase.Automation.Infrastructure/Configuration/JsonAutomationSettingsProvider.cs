@@ -26,6 +26,7 @@ public sealed class JsonAutomationSettingsProvider : IAutomationSettingsProvider
 
         var configuration = new ConfigurationBuilder()
             .AddJsonStream(stream)
+            .AddEnvironmentVariables(prefix: "AUTOMATION_")
             .Build();
 
         var settings = configuration.Get<AutomationSettings>();

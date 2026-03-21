@@ -52,6 +52,7 @@ jobs:
           $appiumOutLog = Join-Path $env:RUNNER_TEMP 'appium-server.out.log'
           $appiumErrLog = Join-Path $env:RUNNER_TEMP 'appium-server.err.log'
           $repoWadPath = Join-Path $env:GITHUB_WORKSPACE 'WindowsApplicationDriver_1.2.1\SourceDir\Windows Application Driver\WinAppDriver.exe'
+          $calculatorAppId = 'Microsoft.WindowsCalculator_8wekyb3d8bbwe!App'
 
           if (-not (Test-DesktopServer)) {
             if (-not (Get-Command appium -ErrorAction SilentlyContinue)) {
@@ -100,6 +101,14 @@ jobs:
 
             exit 0
           }
+
+          $calculatorPackage = Get-AppxPackage -Name 'Microsoft.WindowsCalculator' -ErrorAction SilentlyContinue
+          if (-not $calculatorPackage) {
+            Write-Warning "Desktop AUT '$calculatorAppId' is not installed on this runner. Skipping desktop tests."
+            exit 0
+          }
+
+          $env:AUTOMATION_Desktop__ApplicationId = $calculatorAppId
 
           try {
             dotnet test tests/FrameworkBase.Automation.Desktop.Tests/FrameworkBase.Automation.Desktop.Tests.csproj --configuration Release --no-build --filter "Category=Desktop"
