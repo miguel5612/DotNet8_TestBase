@@ -18,6 +18,11 @@
   },
   "Desktop": {
     "DriverUri": "http://127.0.0.1:4723",
+    "AutomationName": "NovaWindows",
+    "WinAppDriverUrl": "",
+    "SystemPort": null,
+    "CreateSessionTimeoutMilliseconds": 20000,
+    "WaitForAppLaunchSeconds": null,
     "ApplicationId": "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App",
     "DeviceName": "WindowsPC"
   }
