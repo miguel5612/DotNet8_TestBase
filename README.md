@@ -57,17 +57,32 @@ docs/
 
 ## Desktop con Appium
 
-1. Arranca Appium:
+1. Instala Node.js en su versiÃƒÆ’Ã‚Â³n mÃƒÆ’Ã‚Â¡s reciente y verifica que `node -v` y `npm -v` respondan sin error.
+2. Instala Appium fijando la major:
+   `npm install -g appium@3`
+3. No uses `npm install -g appium` a secas en este setup. Deja la major explÃƒÆ’Ã‚Â­cita para evitar terminar con Appium 2 por un tag o cachÃƒÆ’Ã‚Â© previo del entorno.
+4. Instala el driver de Windows que usa este repo:
+   `appium driver install --source=npm appium-novawindows-driver`
+5. Arranca Appium:
    `powershell -ExecutionPolicy Bypass -File scripts/start-appium.ps1`
-2. Ejecuta desktop:
+6. Ejecuta desktop:
    `dotnet test tests/FrameworkBase.Automation.Desktop.Tests/FrameworkBase.Automation.Desktop.Tests.csproj --configuration Release --no-build --filter "Category=Desktop" -m:1`
-3. Si WinAppDriver no levanta, verifica que Windows tenga habilitado Developer Mode.
+7. Si WinAppDriver no levanta, verifica que Windows tenga habilitado Developer Mode.
+8. Si WinAppDriver ya corre aparte, define `Desktop.WinAppDriverUrl` para que Appium reuse ese backend y no intente arrancar otro.
+9. Para validar Appium, el puerto WAD y el proceso real que lo ocupa, ejecuta:
+   `powershell -ExecutionPolicy Bypass -File scripts/check-desktop-driver.ps1`
 
 ## Nota importante sobre desktop
 
 El PDF extraÃƒÂ­do no nombra una tecnologÃƒÂ­a concreta para automatizaciÃƒÂ³n desktop. Para materializar ese frente con las tecnologÃƒÂ­as del ecosistema `.NET` se eligiÃƒÂ³ `Appium/WinAppDriver`, porque conserva el enfoque de driver, capas y objetos de pantalla compatible con el resto del framework.
 
 El helper de Appium quedÃƒÂ³ en [scripts/start-appium.ps1](scripts/start-appium.ps1), usando la ruta de `WinAppDriver.exe` extraÃƒÂ­da localmente.
+
+La configuraciÃƒÂ³n desktop soporta ademÃƒÂ¡s estas opciones en `automation.settings.json`:
+
+- `Desktop.WinAppDriverUrl`: URL de un WinAppDriver ya levantado externamente, por ejemplo `http://127.0.0.1:4790/wd/hub`.
+- `Desktop.SystemPort`: puerto que Appium usarÃƒÂ¡ para arrancar WinAppDriver cuando no se defina `WinAppDriverUrl`.
+- `Desktop.CreateSessionTimeoutMilliseconds` y `Desktop.WaitForAppLaunchSeconds`: tolerancias de arranque para aplicaciones UWP como Calculator.
 
 ## Ruta de lectura recomendada
 

@@ -29,6 +29,19 @@ Porque es:
 
 En este repo se dejÃƒÂ³ ademÃƒÂ¡s un script de arranque para Appium en `scripts/start-appium.ps1`.
 
+La sesiÃƒÂ³n desktop soporta configuraciÃƒÂ³n explÃƒÂ­cita para el backend de Windows:
+
+- `Desktop.WinAppDriverUrl`
+  Permite reutilizar una instancia externa de WinAppDriver ya levantada.
+- `Desktop.SystemPort`
+  Fija el puerto que Appium intentarÃƒÂ¡ usar para arrancar WinAppDriver cuando no se defina `WinAppDriverUrl`.
+- `Desktop.CreateSessionTimeoutMilliseconds`
+  AmplÃƒÂ­a la tolerancia de creaciÃƒÂ³n de sesiÃƒÂ³n.
+- `Desktop.WaitForAppLaunchSeconds`
+  Agrega espera adicional de arranque del lado del servidor para apps UWP.
+
+Para diagnosticar rÃƒÂ¡pido Appium, el puerto de WAD y el proceso que realmente estÃƒÂ¡ escuchando, usa `scripts/check-desktop-driver.ps1`.
+
 ## Buenas prÃƒÂ¡cticas desktop
 
 - Usa `AccessibilityId` antes que coordenadas.
