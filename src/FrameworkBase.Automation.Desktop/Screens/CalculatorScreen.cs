@@ -1,4 +1,5 @@
 using FrameworkBase.Automation.Core.Extensions;
+using System.Text.RegularExpressions;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Windows;
 
@@ -26,8 +27,12 @@ public sealed class CalculatorScreen
     public string ReadResult()
     {
         var rawText = session.FindElement(MobileBy.AccessibilityId("CalculatorResults")).Text;
-        var resultText = rawText.Replace("Display is", string.Empty);
-        return resultText.NormalizeWhitespace();
+        var normalizedText = rawText.NormalizeWhitespace();
+        var numericSuffix = Regex.Match(normalizedText, @"[-+]?\d+(?:[.,]\d+)*$");
+
+        return numericSuffix.Success
+            ? numericSuffix.Value
+            : normalizedText;
     }
 
     private void Clear()
